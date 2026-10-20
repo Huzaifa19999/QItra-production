@@ -20,6 +20,7 @@ import { ProductDetailScreen } from './src/screens/ProductDetailScreen';
 import { CartScreen } from './src/screens/CartScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
 import { OrderConfirmationScreen } from './src/screens/OrderConfirmationScreen';
+import { AdminProductsScreen } from './src/screens/AdminProductsScreen';
 
 function MainApp() {
   const [currentRoute, setCurrentRoute] = useState<NavigationRoute>({ name: 'home' });
@@ -59,6 +60,8 @@ function MainApp() {
                 search: searchParams.get('search') || undefined,
               },
             });
+          } else if (path.includes('/admin')) {
+            setCurrentRoute({ name: 'admin-products' });
           } else {
             setCurrentRoute({ name: 'home' });
           }
@@ -91,6 +94,8 @@ function MainApp() {
         url = `/order-confirmation${
           route.params?.orderNumber ? `?orderNumber=${route.params.orderNumber}` : ''
         }`;
+      } else if (route.name === 'admin-products') {
+        url = '/admin/products';
       }
       window.history.pushState({ route }, '', url);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -128,6 +133,8 @@ function MainApp() {
             onNavigate={navigate}
           />
         );
+      case 'admin-products':
+        return <AdminProductsScreen onNavigate={navigate} />;
       default:
         return <HomeScreen onNavigate={navigate} />;
     }

@@ -82,11 +82,11 @@ export const Header: React.FC<HeaderProps> = ({
           {!isMobile && (
             <View style={styles.announcementRight}>
               <TouchableOpacity
-                onPress={() => Linking.openURL('https://wa.me/923343451617')}
+                onPress={() => Linking.openURL('https://wa.me/92300278574')}
                 style={styles.conciergeLink}
               >
                 <Ionicons name="logo-whatsapp" size={13} color="#25D366" />
-                <Text style={styles.conciergeText}>WhatsApp Concierge: +92 300 0000000</Text>
+                <Text style={styles.conciergeText}>WhatsApp Concierge: + 92 300 278574</Text>
               </TouchableOpacity>
             </View>
           )}
@@ -132,6 +132,16 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* RIGHT ACTIONS: CART & MENU */}
           <View style={styles.actionsContainer}>
+            {/* ADMIN CRUD BUTTON */}
+            <TouchableOpacity
+              style={styles.adminButton}
+              onPress={() => onNavigate({ name: 'admin-products' })}
+              activeOpacity={0.7}
+            >
+              <Ionicons name="settings-outline" size={16} color="#dfba73" />
+              {!isMobile && <Text style={styles.adminButtonText}></Text>}
+            </TouchableOpacity>
+
             <TouchableOpacity
               style={styles.cartButton}
               onPress={() => onNavigate({ name: 'cart' })}
@@ -302,6 +312,7 @@ const styles = StyleSheet.create({
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
     zIndex: 100,
+    position: 'relative',
   },
   announcementBar: {
     backgroundColor: '#050609',
@@ -425,6 +436,22 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 12,
+  },
+  adminButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 12,
+    paddingVertical: 7,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderRadius: 8,
+  },
+  adminButtonText: {
+    color: '#dfba73',
+    fontSize: 12,
+    fontWeight: '700',
   },
   cartButton: {
     position: 'relative',

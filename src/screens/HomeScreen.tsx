@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   useWindowDimensions,
   ActivityIndicator,
+  Image,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Category, Product, NavigationRoute } from '../types';
@@ -75,48 +76,72 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
   ];
 
   return (
-    <View style={styles.container}>
+    <ScrollView style={styles.container} contentContainerStyle={styles.contentContainer}>
       {/* ─── 1. HERO SECTION ─── */}
       <View style={styles.heroSection}>
-        <View style={styles.heroInner}>
-          <View style={styles.badgeRow}>
-            <View style={styles.heroTag}>
-              <Ionicons name="sparkles" size={12} color="#dfba73" />
-              <Text style={styles.heroTagText}>HAUTE MAISON ATELIER</Text>
+        <View style={[styles.heroInner, isMobile && styles.heroInnerMobile]}>
+          {/* Left / Text Content */}
+          <View style={[styles.heroContent, isMobile && styles.heroContentMobile]}>
+            <View style={styles.badgeRow}>
+              <View style={styles.heroTag}>
+                <Ionicons name="sparkles" size={12} color="#dfba73" />
+                <Text style={styles.heroTagText}>HAUTE MAISON ATELIER</Text>
+              </View>
+            </View>
+
+            <Text
+              style={[
+                styles.heroHeading,
+                isMobile && styles.heroHeadingMobile,
+              ]}
+            >
+              The Epitome of Modern Elegance & Fragrance
+            </Text>
+
+            <Text style={[styles.heroSubheading, isMobile && styles.heroSubheadingMobile]}>
+              Immerse yourself in artisanal haute perfumerie, imperial velvet couture,
+              and heirloom jewels crafted for those with discerning taste.
+            </Text>
+
+            <View style={[styles.heroCtaRow, isMobile && styles.heroCtaRowMobile]}>
+              <TouchableOpacity
+                style={styles.primaryCta}
+                onPress={() => onNavigate({ name: 'products' })}
+                activeOpacity={0.8}
+              >
+                <Text style={styles.primaryCtaText}>Explore All Creations</Text>
+                <Ionicons name="arrow-forward" size={16} color="#000000" />
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.secondaryCta}
+                onPress={() =>
+                  onNavigate({
+                    name: 'products',
+                    params: { category: 'perfume' },
+                  })
+                }
+                activeOpacity={0.8}
+              >
+                <Text style={styles.secondaryCtaText}>Discover Perfumes</Text>
+              </TouchableOpacity>
             </View>
           </View>
 
-          <Text style={[styles.heroHeading, isMobile && styles.heroHeadingMobile]}>
-            The Epitome of Modern Elegance & Fragrance
-          </Text>
-
-          <Text style={styles.heroSubheading}>
-            Immerse yourself in artisanal haute perfumerie, imperial velvet couture,
-            and heirloom jewels crafted for those with discerning taste.
-          </Text>
-
-          <View style={[styles.heroCtaRow, isMobile && styles.heroCtaRowMobile]}>
-            <TouchableOpacity
-              style={styles.primaryCta}
-              onPress={() => onNavigate({ name: 'products' })}
-              activeOpacity={0.8}
-            >
-              <Text style={styles.primaryCtaText}>Explore All Creations</Text>
-              <Ionicons name="arrow-forward" size={16} color="#000000" />
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              style={styles.secondaryCta}
-              onPress={() =>
-                onNavigate({
-                  name: 'products',
-                  params: { category: 'perfume' },
-                })
-              }
-              activeOpacity={0.8}
-            >
-              <Text style={styles.secondaryCtaText}>Discover Perfumes</Text>
-            </TouchableOpacity>
+          {/* Right / Hero Image Container */}
+          <View
+            style={[
+              styles.heroImageContainer,
+              isMobile && styles.heroImageContainerMobile,
+            ]}
+          >
+            <Image
+              source={{
+                uri: 'https://images.unsplash.com/photo-1615397349754-cfa2066a298e?auto=format&fit=crop&w=1000&q=80',
+              }}
+              style={styles.heroImage}
+              resizeMode="cover"
+            />
           </View>
         </View>
       </View>
@@ -239,7 +264,7 @@ export const HomeScreen: React.FC<HomeScreenProps> = ({ onNavigate }) => {
           </TouchableOpacity>
         </View>
       </View>
-    </View>
+    </ScrollView>
   );
 };
 
@@ -255,15 +280,29 @@ const styles = StyleSheet.create({
     backgroundColor: '#0c0d14',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255, 255, 255, 0.08)',
-    paddingVertical: 70,
+    paddingVertical: 60,
     paddingHorizontal: 20,
     alignItems: 'center',
     justifyContent: 'center',
   },
   heroInner: {
-    maxWidth: 900,
+    maxWidth: 1200,
+    width: '100%',
+    flexDirection: 'row',
     alignItems: 'center',
-    textAlign: 'center' as any,
+    justifyContent: 'space-between',
+    gap: 40,
+  },
+  heroInnerMobile: {
+    flexDirection: 'column',
+    gap: 28,
+  },
+  heroContent: {
+    flex: 1,
+    alignItems: 'flex-start',
+  },
+  heroContentMobile: {
+    alignItems: 'center',
   },
   badgeRow: {
     marginBottom: 16,
@@ -289,7 +328,7 @@ const styles = StyleSheet.create({
     fontSize: 44,
     fontWeight: '800',
     color: '#ffffff',
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 52,
     letterSpacing: -0.5,
     marginBottom: 18,
@@ -297,14 +336,18 @@ const styles = StyleSheet.create({
   heroHeadingMobile: {
     fontSize: 28,
     lineHeight: 36,
+    textAlign: 'center',
   },
   heroSubheading: {
     fontSize: 16,
     color: '#9ca3af',
-    textAlign: 'center',
+    textAlign: 'left',
     lineHeight: 26,
-    maxWidth: 680,
+    maxWidth: 600,
     marginBottom: 32,
+  },
+  heroSubheadingMobile: {
+    textAlign: 'center',
   },
   heroCtaRow: {
     flexDirection: 'row',
@@ -345,6 +388,23 @@ const styles = StyleSheet.create({
     color: '#ffffff',
     fontSize: 14,
     fontWeight: '600',
+  },
+  heroImageContainer: {
+    flex: 1,
+    width: '100%',
+    height: 420,
+    borderRadius: 20,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.25)',
+    marginTop: 220,
+  },
+  heroImageContainerMobile: {
+    height: 360,
+  },
+  heroImage: {
+    width: '100%',
+    height: '100%',
   },
   benefitsSection: {
     backgroundColor: '#090a10',
@@ -420,7 +480,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     color: '#ffffff',
-    fontSize: 26,
+    fontSize: 20,
     fontWeight: '700',
     letterSpacing: -0.3,
   },
@@ -439,6 +499,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     flexWrap: 'wrap',
     marginHorizontal: -8,
+    width: '100%',
   },
   categoriesGridMobile: {
     flexDirection: 'column',
@@ -446,7 +507,7 @@ const styles = StyleSheet.create({
     gap: 16,
   },
   categoryCol: {
-    width: '50%',
+    width: '100%',
     padding: 8,
   },
   productsGrid: {
@@ -463,7 +524,7 @@ const styles = StyleSheet.create({
     padding: 8,
   },
   productColMobile: {
-    width: '50%',
+    width: '100%',
   },
   loadingContainer: {
     paddingVertical: 50,
@@ -483,7 +544,6 @@ const styles = StyleSheet.create({
     borderColor: 'rgba(212, 175, 55, 0.3)',
     padding: 40,
     alignItems: 'center',
-    textAlign: 'center' as any,
   },
   vipTag: {
     flexDirection: 'row',

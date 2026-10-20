@@ -166,3 +166,116 @@ export async function createOrder(payload: OrderPayload): Promise<OrderResponse>
     items,
   };
 }
+
+export async function createProduct(productData: {
+  name: string;
+  description: string;
+  price: number;
+  stock: number;
+  categoryId: number;
+  gender?: string;
+  image?: string;
+}): Promise<Product> {
+  try {
+    const res = await fetchWithFallback('/api/products', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData),
+    });
+    if (res && res.ok) {
+      const created = await res.json();
+      const formatted = { ...created, price: Number(created.price) };
+      PRODUCTS.unshift(formatted);
+      return formatted;
+    }
+  } catch (e) {
+    console.error('Failed to create product via API:', e);
+  }
+
+  // Local fallback
+  const category = CATEGORIES.find((c) => c.id === productData.categoryId) || CATEGORIES[0];
+  const newProduct: Product = {
+    id: Date.now(),
+    name: productData.name,
+    description: productData.description,
+    price: Number(productData.price),
+    stock: Number(productData.stock),
+    gender: (productData.gender as any) || 'UNISEX',
+    categoryId: productData.categoryId,
+    category,
+    image: productData.image || null,
+  };
+  PRODUCTS.unshift(newProduct);
+  return newProduct;
+}
+
+export async function updateProduct(
+  id: number,
+  productData: Partial<{
+    name: string;
+    description: string;
+    price: number;
+    stock: number;
+    categoryId: number;
+    gender?: string;
+    image?: string;
+  }>
+): Promise<Product> {
+  try {
+    const res = await fetchWithFallback(`/api/products/${id}`, {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(productData),
+    });
+    if (res && res.ok) {
+      const updated = await res.json();
+      const formatted = { ...updated, price: Number(updated.price) };
+      const idx = PRODUCTS.findIndex((p) => p.id === id);
+      if (idx !== -1) PRODUCTS[idx] = formatted;
+      return formatted;
+    }
+  } catch (e) {
+    console.error('Failed to update product via API:', e);
+  }
+
+  // Local fallback
+  const idx = PRODUCTS.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    const category = productData.categoryId
+      ? CATEGORIES.find((c) => c.id === productData.categoryId) || PRODUCTS[idx].category
+      : PRODUCTS[idx].category;
+    PRODUCTS[idx] = {
+      ...PRODUCTS[idx],
+      ...productData,
+      price: productData.price !== undefined ? Number(productData.price) : PRODUCTS[idx].price,
+      stock: productData.stock !== undefined ? Number(productData.stock) : PRODUCTS[idx].stock,
+      category,
+    };
+    return PRODUCTS[idx];
+  }
+  throw new Error('Product not found');
+}
+
+export async function deleteProduct(id: number): Promise<{ success: boolean }> {
+  try {
+    const res = await fetchWithFallback(`/api/products/${id}`, {
+      method: 'DELETE',
+    });
+    if (res && res.ok) {
+      const idx = PRODUCTS.findIndex((p) => p.id === id);
+      if (idx !== -1) PRODUCTS.splice(idx, 1);
+      return { success: true };
+    }
+  } catch (e) {
+    console.error('Failed to delete product via API:', e);
+  }
+
+  // Local fallback
+  const idx = PRODUCTS.findIndex((p) => p.id === id);
+  if (idx !== -1) {
+    PRODUCTS.splice(idx, 1);
+    return { success: true };
+  }
+  return { success: false };
+}
+

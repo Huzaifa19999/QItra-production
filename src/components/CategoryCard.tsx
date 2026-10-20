@@ -59,13 +59,14 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
 
 const styles = StyleSheet.create({
   card: {
-    height: 220,
+    height: 260,
     borderRadius: 20,
     overflow: 'hidden',
     position: 'relative',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
     transitionDuration: '300ms' as any,
+    width: '100%',
   },
   cardHovered: {
     borderColor: 'rgba(212, 175, 55, 0.5)',

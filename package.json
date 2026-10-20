@@ -11,7 +11,8 @@
     "dev:all": "concurrently \"npm run server\" \"npm run web\"",
     "db:generate": "prisma generate",
     "db:seed": "tsx prisma/seed.ts",
-    "db:push": "prisma db push"
+    "db:push": "prisma db push",
+    "db:studio": "prisma studio"
   },
   "dependencies": {
     "@expo/metro-runtime": "~58.0.14",

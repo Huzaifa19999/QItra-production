@@ -77,7 +77,8 @@ export type ScreenName =
   | 'product-detail'
   | 'cart'
   | 'checkout'
-  | 'order-confirmation';
+  | 'order-confirmation'
+  | 'admin-products';
 
 export interface NavigationRoute {
   name: ScreenName;
