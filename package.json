@@ -2,21 +2,45 @@
   "name": "qitra-rn-web",
   "version": "1.0.0",
   "main": "index.ts",
-  "dependencies": {
-    "expo": "~58.0.16",
-    "expo-status-bar": "~58.0.3",
-    "react": "19.3.0",
-    "react-native": "0.88.0"
-  },
-  "devDependencies": {
-    "@types/react": "~19.3.0",
-    "typescript": "~6.0.3"
-  },
   "scripts": {
     "start": "expo start",
     "android": "expo start --android",
     "ios": "expo start --ios",
-    "web": "expo start --web"
+    "web": "expo start --web",
+    "server": "tsx server/index.ts",
+    "dev:all": "concurrently \"npm run server\" \"npm run web\"",
+    "db:generate": "prisma generate",
+    "db:seed": "tsx prisma/seed.ts",
+    "db:push": "prisma db push"
+  },
+  "dependencies": {
+    "@expo/metro-runtime": "~58.0.14",
+    "@expo/vector-icons": "^15.0.2",
+    "@prisma/client": "6.19.3",
+    "@react-native-async-storage/async-storage": "2.2.0",
+    "bcryptjs": "^3.0.3",
+    "cloudinary": "^2.11.0",
+    "cors": "^2.8.6",
+    "dotenv": "^18.0.8",
+    "expo": "~58.0.16",
+    "expo-status-bar": "~58.0.3",
+    "express": "^5.3.0",
+    "react": "19.3.0",
+    "react-dom": "19.3.0",
+    "react-native": "0.88.0",
+    "react-native-web": "^0.21.4",
+    "zod": "^4.6.7"
+  },
+  "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/cors": "^2.8.19",
+    "@types/express": "^5.0.6",
+    "@types/node": "^26.6.5",
+    "@types/react": "~19.3.0",
+    "concurrently": "^10.0.6",
+    "prisma": "6.19.3",
+    "tsx": "^4.23.15",
+    "typescript": "~6.0.3"
   },
   "private": true
 }
