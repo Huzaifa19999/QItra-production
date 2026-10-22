@@ -19,3 +19,19 @@ export function generateOrderNumber(): string {
   const randomStr = Math.floor(1000 + Math.random() * 9000).toString();
   return `ORD-${year}${month}${day}-${randomStr}`;
 }
+
+export function formatDate(dateString?: string): string {
+  if (!dateString) return 'Just now';
+  try {
+    const d = new Date(dateString);
+    return d.toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit',
+    });
+  } catch {
+    return dateString;
+  }
+}

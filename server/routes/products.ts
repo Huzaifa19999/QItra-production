@@ -48,7 +48,8 @@ router.get('/', async (req: Request, res: Response) => {
 // GET /api/products/:id
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const productId = parseInt(req.params.id, 10);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const productId = parseInt(idParam, 10);
     if (isNaN(productId)) {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
@@ -109,7 +110,8 @@ router.post('/', async (req: Request, res: Response) => {
 // PUT /api/products/:id
 router.put('/:id', async (req: Request, res: Response) => {
   try {
-    const productId = parseInt(req.params.id, 10);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const productId = parseInt(idParam, 10);
     if (isNaN(productId)) {
       return res.status(400).json({ error: 'Invalid product ID' });
     }
@@ -148,7 +150,8 @@ router.put('/:id', async (req: Request, res: Response) => {
 // DELETE /api/products/:id
 router.delete('/:id', async (req: Request, res: Response) => {
   try {
-    const productId = parseInt(req.params.id, 10);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const productId = parseInt(idParam, 10);
     if (isNaN(productId)) {
       return res.status(400).json({ error: 'Invalid product ID' });
     }

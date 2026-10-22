@@ -7,6 +7,7 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
+    "build": "prisma generate && expo export -p web",
     "server": "tsx server/index.ts",
     "dev:all": "concurrently \"npm run server\" \"npm run web\"",
     "db:generate": "prisma generate",

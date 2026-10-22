@@ -39,7 +39,8 @@ router.get('/', async (_req: Request, res: Response) => {
 // GET /api/orders/:id
 router.get('/:id', async (req: Request, res: Response) => {
   try {
-    const orderId = parseInt(req.params.id, 10);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const orderId = parseInt(idParam, 10);
     if (isNaN(orderId)) {
       return res.status(400).json({ error: 'Invalid order ID' });
     }
@@ -77,71 +78,66 @@ router.post('/', async (req: Request, res: Response) => {
 
     const { customerName, phone, whatsapp, address, city, items } = result.data;
 
-    // Run in Prisma transaction to ensure stock consistency
-    const orderResult = await prisma.$transaction(async (tx) => {
-      let totalAmount = 0;
-      const orderItemsData = [];
+    let totalAmount = 0;
+    const orderItemsData = [];
 
-      for (const item of items) {
-        const product = await tx.product.findUnique({
-          where: { id: item.productId },
-        });
-
-        if (!product) {
-          throw new Error(`Product ID ${item.productId} not found`);
-        }
-
-        if (product.stock < item.quantity) {
-          throw new Error(`Insufficient stock for ${product.name}`);
-        }
-
-        const itemTotal = Number(product.price) * item.quantity;
-        totalAmount += itemTotal;
-
-        orderItemsData.push({
-          productId: product.id,
-          quantity: item.quantity,
-          price: product.price,
-        });
-
-        // Decrement stock
-        await tx.product.update({
-          where: { id: product.id },
-          data: {
-            stock: product.stock - item.quantity,
-          },
-        });
-      }
-
-      // Add shipping if applicable (free over 3000)
-      const shippingFee = totalAmount >= 3000 ? 0 : 250;
-      const grandTotal = totalAmount + shippingFee;
-
-      const orderNumber = generateOrderNumber();
-
-      const newOrder = await tx.order.create({
-        data: {
-          orderNumber,
-          customerName,
-          phone,
-          whatsapp: whatsapp || phone,
-          address,
-          city,
-          totalAmount: grandTotal,
-          items: {
-            create: orderItemsData,
-          },
-        },
-        include: {
-          items: {
-            include: {
-              product: true,
-            },
-          },
-        },
+    for (const item of items) {
+      const product = await prisma.product.findUnique({
+        where: { id: item.productId },
       });
 
-      return newOrder;
+      if (!product) {
+        return res.status(404).json({ error: `Product ID ${item.productId} not found` });
+      }
+
+      if (product.stock < item.quantity) {
+        return res.status(400).json({ error: `Insufficient stock for ${product.name}` });
+      }
+
+      const itemTotal = Number(product.price) * item.quantity;
+      totalAmount += itemTotal;
+
+      orderItemsData.push({
+        productId: product.id,
+        quantity: item.quantity,
+        price: product.price,
+      });
+
+      // Decrement stock
+      await prisma.product.update({
+        where: { id: product.id },
+        data: {
+          stock: product.stock - item.quantity,
+        },
+      });
+    }
+
+    // Add shipping if applicable (free over 3000)
+    const shippingFee = totalAmount >= 3000 ? 0 : 250;
+    const grandTotal = totalAmount + shippingFee;
+
+    const orderNumber = generateOrderNumber();
+
+    const orderResult = await prisma.order.create({
+      data: {
+        orderNumber,
+        customerName,
+        phone,
+        whatsapp: whatsapp || phone,
+        address,
+        city,
+        totalAmount: grandTotal,
+        items: {
+          create: orderItemsData,
+        },
+      },
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
 
     // Attempt WhatsApp confirmation asynchronously
@@ -159,34 +155,57 @@ router.post('/', async (req: Request, res: Response) => {
 // PATCH /api/orders/:id
 router.patch('/:id', async (req: Request, res: Response) => {
   try {
-    const orderId = parseInt(req.params.id, 10);
+    const idParam = Array.isArray(req.params.id) ? req.params.id[0] : req.params.id;
+    const orderId = parseInt(idParam, 10);
     if (isNaN(orderId)) {
       return res.status(400).json({ error: 'Invalid order ID' });
     }
 
-    const { status } = req.body;
-    const validStatuses: OrderStatus[] = [
-      'PENDING',
-      'CONFIRMED',
-      'PROCESSING',
-      'SHIPPED',
-      'DELIVERED',
-      'CANCELLED',
-    ];
+    const { status, address, city, customerName, phone, whatsapp } = req.body;
+    const updateData: any = {};
 
-    if (!status || !validStatuses.includes(status as OrderStatus)) {
-      return res.status(400).json({ error: 'Invalid status' });
+    if (status) {
+      const validStatuses: OrderStatus[] = [
+        'PENDING',
+        'CONFIRMED',
+        'PROCESSING',
+        'SHIPPED',
+        'DELIVERED',
+        'CANCELLED',
+      ];
+
+      if (!validStatuses.includes(status as OrderStatus)) {
+        return res.status(400).json({ error: 'Invalid status' });
+      }
+      updateData.status = status as OrderStatus;
+    }
+
+    if (address !== undefined) updateData.address = address;
+    if (city !== undefined) updateData.city = city;
+    if (customerName !== undefined) updateData.customerName = customerName;
+    if (phone !== undefined) updateData.phone = phone;
+    if (whatsapp !== undefined) updateData.whatsapp = whatsapp;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No fields provided to update' });
     }
 
     const order = await prisma.order.update({
       where: { id: orderId },
-      data: { status: status as OrderStatus },
+      data: updateData,
+      include: {
+        items: {
+          include: {
+            product: true,
+          },
+        },
+      },
     });
 
     return res.json(order);
   } catch (error) {
-    console.error('Failed to update order status:', error);
-    return res.status(500).json({ error: 'Failed to update order status' });
+    console.error('Failed to update order:', error);
+    return res.status(500).json({ error: 'Failed to update order' });
   }
 });
 

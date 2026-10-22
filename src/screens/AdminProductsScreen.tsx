@@ -9,6 +9,7 @@ import {
   useWindowDimensions,
   ActivityIndicator,
   Modal,
+  Platform,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Product, Category, NavigationRoute, Gender } from '../types';
@@ -18,15 +19,18 @@ import {
   createProduct,
   updateProduct,
   deleteProduct,
+  uploadImageFile,
 } from '../services/api';
 import { formatCurrency } from '../utils/format';
 import { Badge } from '../components/Badge';
+import { useAuth } from '../context/AuthContext';
 
 interface AdminProductsScreenProps {
   onNavigate: (route: NavigationRoute) => void;
 }
 
 export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavigate }) => {
+  const { user, logout } = useAuth();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
@@ -49,6 +53,53 @@ export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavi
   const [categoryId, setCategoryId] = useState<number>(1);
   const [gender, setGender] = useState<Gender>('UNISEX');
   const [image, setImage] = useState('');
+  const [uploadingImage, setUploadingImage] = useState(false);
+  const [imageUploadError, setImageUploadError] = useState('');
+  const [showUrlInput, setShowUrlInput] = useState(false);
+
+  const handleManualImagePick = () => {
+    if (Platform.OS === 'web' && typeof document !== 'undefined') {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = 'image/*';
+      input.onchange = async (e: any) => {
+        const file = e.target?.files?.[0];
+        if (!file) return;
+
+        if (file.size > 10 * 1024 * 1024) {
+          setImageUploadError('Image size exceeds 10MB limit.');
+          return;
+        }
+
+        setImageUploadError('');
+        setUploadingImage(true);
+
+        const reader = new FileReader();
+        reader.onload = async () => {
+          const base64Data = reader.result as string;
+          // Set preview immediately
+          setImage(base64Data);
+
+          try {
+            const uploadedUrl = await uploadImageFile(base64Data);
+            if (uploadedUrl) {
+              setImage(uploadedUrl);
+            }
+          } catch (err: any) {
+            console.error('Image upload failed', err);
+          } finally {
+            setUploadingImage(false);
+          }
+        };
+        reader.onerror = () => {
+          setImageUploadError('Failed to read image file.');
+          setUploadingImage(false);
+        };
+        reader.readAsDataURL(file);
+      };
+      input.click();
+    }
+  };
 
   const loadData = async () => {
     setLoading(true);
@@ -82,6 +133,9 @@ export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavi
     setCategoryId(categories[0]?.id || 1);
     setGender('UNISEX');
     setImage('');
+    setImageUploadError('');
+    setUploadingImage(false);
+    setShowUrlInput(false);
     setFormError('');
     setModalOpen(true);
   };
@@ -95,6 +149,9 @@ export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavi
     setCategoryId(prod.categoryId);
     setGender(prod.gender || 'UNISEX');
     setImage(prod.image || '');
+    setImageUploadError('');
+    setUploadingImage(false);
+    setShowUrlInput(false);
     setFormError('');
     setModalOpen(true);
   };
@@ -177,6 +234,48 @@ export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavi
   return (
     <View style={styles.container}>
       <View style={styles.inner}>
+        {/* ADMIN SUB-NAV BAR */}
+        <View style={[styles.navTabs, isMobile && styles.navTabsMobile]}>
+          <View style={styles.tabGroup}>
+            <TouchableOpacity style={[styles.tabBtn, styles.tabBtnActive]}>
+              <Ionicons name="cube-outline" size={16} color="#dfba73" />
+              <Text style={[styles.tabBtnText, styles.tabBtnTextActive]}>
+                Products Catalogue
+              </Text>
+              <View style={styles.tabBadge}>
+                <Text style={styles.tabBadgeText}>{products.length}</Text>
+              </View>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              style={styles.tabBtn}
+              onPress={() => onNavigate({ name: 'admin-orders' })}
+            >
+              <Ionicons name="clipboard-outline" size={16} color="#9ca3af" />
+              <Text style={styles.tabBtnText}>Orders & Client Address</Text>
+            </TouchableOpacity>
+          </View>
+
+          <View style={styles.userSection}>
+            <View style={styles.userInfo}>
+              <Ionicons name="person-circle-outline" size={18} color="#dfba73" />
+              <Text style={styles.userEmail} numberOfLines={1}>
+                {user?.email || 'admin@perfumestore.com'}
+              </Text>
+            </View>
+            <TouchableOpacity
+              style={styles.logoutBtn}
+              onPress={async () => {
+                await logout();
+                onNavigate({ name: 'login' });
+              }}
+            >
+              <Ionicons name="log-out-outline" size={15} color="#f87171" />
+              <Text style={styles.logoutBtnText}>Sign Out</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
         {/* HEADER BAR */}
         <View style={[styles.headerRow, isMobile && styles.headerRowMobile]}>
           <View>
@@ -443,16 +542,92 @@ export const AdminProductsScreen: React.FC<AdminProductsScreenProps> = ({ onNavi
               </View>
             </View>
 
-            {/* IMAGE URL */}
+            {/* MANUAL IMAGE UPLOAD */}
             <View style={styles.formGroup}>
-              <Text style={styles.fieldLabel}>Image URL</Text>
-              <TextInput
-                style={styles.input}
-                placeholder="https://images.unsplash.com/photo-..."
-                placeholderTextColor="#6b7280"
-                value={image}
-                onChangeText={setImage}
-              />
+              <View style={styles.imageLabelRow}>
+                <Text style={styles.fieldLabel}>Creation Portrait (Manual Upload) *</Text>
+                <TouchableOpacity
+                  onPress={() => setShowUrlInput(!showUrlInput)}
+                  style={styles.toggleUrlBtn}
+                >
+                  <Ionicons
+                    name={showUrlInput ? 'cloud-upload-outline' : 'link-outline'}
+                    size={12}
+                    color="#dfba73"
+                  />
+                  <Text style={styles.toggleUrlBtnText}>
+                    {showUrlInput ? 'Switch to File Upload' : 'Paste Image URL'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+
+              {imageUploadError ? (
+                <View style={styles.imageErrorBox}>
+                  <Ionicons name="warning-outline" size={14} color="#f87171" />
+                  <Text style={styles.imageErrorText}>{imageUploadError}</Text>
+                </View>
+              ) : null}
+
+              {showUrlInput ? (
+                <TextInput
+                  style={styles.input}
+                  placeholder="https://images.unsplash.com/photo-..."
+                  placeholderTextColor="#6b7280"
+                  value={image}
+                  onChangeText={setImage}
+                />
+              ) : image ? (
+                <View style={styles.imagePreviewContainer}>
+                  <Image source={{ uri: image }} style={styles.imagePreview} resizeMode="cover" />
+                  <View style={styles.imagePreviewOverlay}>
+                    <View style={styles.imageReadyBadge}>
+                      <Ionicons name="checkmark-circle" size={13} color="#10b981" />
+                      <Text style={styles.imageReadyText}>Image Selected</Text>
+                    </View>
+                    <View style={styles.imagePreviewActions}>
+                      <TouchableOpacity
+                        style={styles.changeImageBtn}
+                        onPress={handleManualImagePick}
+                        disabled={uploadingImage}
+                      >
+                        <Ionicons name="camera-reverse-outline" size={14} color="#dfba73" />
+                        <Text style={styles.changeImageText}>Change</Text>
+                      </TouchableOpacity>
+                      <TouchableOpacity
+                        style={styles.removeImageBtn}
+                        onPress={() => setImage('')}
+                        disabled={uploadingImage}
+                      >
+                        <Ionicons name="trash-outline" size={14} color="#f87171" />
+                      </TouchableOpacity>
+                    </View>
+                  </View>
+                </View>
+              ) : (
+                <TouchableOpacity
+                  style={[styles.manualUploadBox, uploadingImage && styles.btnDisabled]}
+                  onPress={handleManualImagePick}
+                  disabled={uploadingImage}
+                  activeOpacity={0.8}
+                >
+                  {uploadingImage ? (
+                    <View style={styles.uploadingBox}>
+                      <ActivityIndicator size="small" color="#dfba73" />
+                      <Text style={styles.uploadingText}>Processing & uploading image...</Text>
+                    </View>
+                  ) : (
+                    <View style={styles.uploadIdleBox}>
+                      <View style={styles.uploadIconCircle}>
+                        <Ionicons name="cloud-upload-outline" size={24} color="#dfba73" />
+                      </View>
+                      <Text style={styles.uploadMainText}>
+                        Click to manually choose image from device
+                      </Text>
+                      <Text style={styles.uploadSubText}>PNG, JPG, WEBP up to 10MB</Text>
+                    </View>
+                  )}
+                </TouchableOpacity>
+              )}
             </View>
 
             {/* DESCRIPTION */}
@@ -882,5 +1057,228 @@ const styles = StyleSheet.create({
   },
   btnDisabled: {
     opacity: 0.6,
+  },
+
+  /* ADMIN NAV TABS */
+  navTabs: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    backgroundColor: '#0c0d14',
+    borderRadius: 14,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.08)',
+    paddingHorizontal: 16,
+    paddingVertical: 10,
+    marginBottom: 28,
+  },
+  navTabsMobile: {
+    flexDirection: 'column',
+    gap: 12,
+    alignItems: 'stretch',
+  },
+  tabGroup: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 10,
+  },
+  tabBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 8,
+    backgroundColor: 'rgba(255, 255, 255, 0.03)',
+  },
+  tabBtnActive: {
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.4)',
+  },
+  tabBtnText: {
+    color: '#9ca3af',
+    fontSize: 12.5,
+    fontWeight: '600',
+  },
+  tabBtnTextActive: {
+    color: '#dfba73',
+    fontWeight: '700',
+  },
+  tabBadge: {
+    backgroundColor: '#dfba73',
+    borderRadius: 10,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginLeft: 2,
+  },
+  tabBadgeText: {
+    color: '#000000',
+    fontSize: 10,
+    fontWeight: '800',
+  },
+  userSection: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 16,
+  },
+  userInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  userEmail: {
+    color: '#d1d5db',
+    fontSize: 12,
+    maxWidth: 180,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    paddingHorizontal: 10,
+    paddingVertical: 6,
+    borderRadius: 6,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+  },
+  logoutBtnText: {
+    color: '#f87171',
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+
+  /* MANUAL IMAGE UPLOAD STYLES */
+  imageLabelRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  toggleUrlBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+  },
+  toggleUrlBtnText: {
+    color: '#dfba73',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  imageErrorBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+    backgroundColor: 'rgba(244, 63, 94, 0.1)',
+    borderRadius: 6,
+    padding: 8,
+    marginBottom: 8,
+  },
+  imageErrorText: {
+    color: '#f87171',
+    fontSize: 11,
+  },
+  manualUploadBox: {
+    backgroundColor: 'rgba(255, 255, 255, 0.02)',
+    borderWidth: 1.5,
+    borderColor: 'rgba(212, 175, 55, 0.35)',
+    borderStyle: 'dashed',
+    borderRadius: 12,
+    paddingVertical: 24,
+    paddingHorizontal: 16,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  uploadIdleBox: {
+    alignItems: 'center',
+    gap: 6,
+  },
+  uploadIconCircle: {
+    width: 46,
+    height: 46,
+    borderRadius: 23,
+    backgroundColor: 'rgba(212, 175, 55, 0.12)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
+  uploadMainText: {
+    color: '#ffffff',
+    fontSize: 12.5,
+    fontWeight: '600',
+    textAlign: 'center',
+  },
+  uploadSubText: {
+    color: '#6b7280',
+    fontSize: 11,
+    textAlign: 'center',
+  },
+  uploadingBox: {
+    alignItems: 'center',
+    gap: 8,
+    paddingVertical: 12,
+  },
+  uploadingText: {
+    color: '#dfba73',
+    fontSize: 12,
+    fontWeight: '600',
+  },
+  imagePreviewContainer: {
+    borderRadius: 12,
+    overflow: 'hidden',
+    height: 140,
+    backgroundColor: '#1b1d28',
+    position: 'relative',
+    borderWidth: 1,
+    borderColor: 'rgba(212, 175, 55, 0.3)',
+  },
+  imagePreview: {
+    width: '100%',
+    height: '100%',
+  },
+  imagePreviewOverlay: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: 'rgba(7, 8, 13, 0.85)',
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  imageReadyBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  imageReadyText: {
+    color: '#10b981',
+    fontSize: 11.5,
+    fontWeight: '600',
+  },
+  imagePreviewActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 8,
+  },
+  changeImageBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 4,
+    backgroundColor: 'rgba(212, 175, 55, 0.15)',
+    paddingHorizontal: 8,
+    paddingVertical: 4,
+    borderRadius: 6,
+  },
+  changeImageText: {
+    color: '#dfba73',
+    fontSize: 11,
+    fontWeight: '600',
+  },
+  removeImageBtn: {
+    backgroundColor: 'rgba(244, 63, 94, 0.15)',
+    padding: 5,
+    borderRadius: 6,
   },
 });

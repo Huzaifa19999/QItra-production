@@ -47,10 +47,14 @@ app.use((err: any, _req: express.Request, res: express.Response, _next: express.
   res.status(500).json({ error: err?.message || 'Internal Server Error' });
 });
 
-app.listen(PORT, () => {
-  console.log(`\n══════════════════════════════════════════════════════════`);
-  console.log(`  ⚜️  QITRA Haute Maison — Backend API Server`);
-  console.log(`  🚀  Listening at: http://localhost:${PORT}`);
-  console.log(`  🌐  Health Check: http://localhost:${PORT}/api/health`);
-  console.log(`══════════════════════════════════════════════════════════\n`);
-});
+if (!process.env.VERCEL) {
+  app.listen(PORT, () => {
+    console.log(`\n══════════════════════════════════════════════════════════`);
+    console.log(`  ⚜️  QITRA Haute Maison — Backend API Server`);
+    console.log(`  🚀  Listening at: http://localhost:${PORT}`);
+    console.log(`  🌐  Health Check: http://localhost:${PORT}/api/health`);
+    console.log(`══════════════════════════════════════════════════════════\n`);
+  });
+}
+
+export default app;

@@ -11,6 +11,7 @@ import {
 import { StatusBar } from 'expo-status-bar';
 import { Ionicons } from '@expo/vector-icons';
 import { CartProvider, useCart } from './src/context/CartContext';
+import { AuthProvider, useAuth } from './src/context/AuthContext';
 import { NavigationRoute, ScreenName } from './src/types';
 import { Header } from './src/components/Header';
 import { Footer } from './src/components/Footer';
@@ -21,11 +22,14 @@ import { CartScreen } from './src/screens/CartScreen';
 import { CheckoutScreen } from './src/screens/CheckoutScreen';
 import { OrderConfirmationScreen } from './src/screens/OrderConfirmationScreen';
 import { AdminProductsScreen } from './src/screens/AdminProductsScreen';
+import { AdminOrdersScreen } from './src/screens/AdminOrdersScreen';
+import { LoginScreen } from './src/screens/LoginScreen';
 
 function MainApp() {
   const [currentRoute, setCurrentRoute] = useState<NavigationRoute>({ name: 'home' });
   const { lastAddedName, clearLastAddedNotification } = useCart();
-  const scrollViewRef = useRef<ScrollView>(null);
+  const { isAdmin, isLoading: authLoading } = useAuth();
+  const scrollViewRef = useRef<any>(null);
 
   // Web Browser History Synchronization
   useEffect(() => {
@@ -60,8 +64,12 @@ function MainApp() {
                 search: searchParams.get('search') || undefined,
               },
             });
+          } else if (path.includes('/admin/orders')) {
+            setCurrentRoute({ name: 'admin-orders' });
           } else if (path.includes('/admin')) {
             setCurrentRoute({ name: 'admin-products' });
+          } else if (path.includes('/login')) {
+            setCurrentRoute({ name: 'login' });
           } else {
             setCurrentRoute({ name: 'home' });
           }
@@ -96,6 +104,10 @@ function MainApp() {
         }`;
       } else if (route.name === 'admin-products') {
         url = '/admin/products';
+      } else if (route.name === 'admin-orders') {
+        url = '/admin/orders';
+      } else if (route.name === 'login') {
+        url = '/login';
       }
       window.history.pushState({ route }, '', url);
       window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -133,8 +145,35 @@ function MainApp() {
             onNavigate={navigate}
           />
         );
+      case 'login':
+        return (
+          <LoginScreen
+            onNavigate={navigate}
+            returnTo={currentRoute.params?.returnTo || 'admin-products'}
+          />
+        );
       case 'admin-products':
+        // Protected Admin route
+        if (!isAdmin) {
+          return (
+            <LoginScreen
+              onNavigate={navigate}
+              returnTo="admin-products"
+            />
+          );
+        }
         return <AdminProductsScreen onNavigate={navigate} />;
+      case 'admin-orders':
+        // Protected Admin route
+        if (!isAdmin) {
+          return (
+            <LoginScreen
+              onNavigate={navigate}
+              returnTo="admin-orders"
+            />
+          );
+        }
+        return <AdminOrdersScreen onNavigate={navigate} />;
       default:
         return <HomeScreen onNavigate={navigate} />;
     }
@@ -206,9 +245,11 @@ function MainApp() {
 export default function App() {
   return (
     <SafeAreaView style={styles.safeArea}>
-      <CartProvider>
-        <MainApp />
-      </CartProvider>
+      <AuthProvider>
+        <CartProvider>
+          <MainApp />
+        </CartProvider>
+      </AuthProvider>
     </SafeAreaView>
   );
 }

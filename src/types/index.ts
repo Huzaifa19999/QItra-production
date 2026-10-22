@@ -71,6 +71,13 @@ export interface OrderResponse {
   }[];
 }
 
+export interface User {
+  id: number;
+  name: string;
+  email: string;
+  role: 'ADMIN' | 'CUSTOMER';
+}
+
 export type ScreenName =
   | 'home'
   | 'products'
@@ -78,7 +85,9 @@ export type ScreenName =
   | 'cart'
   | 'checkout'
   | 'order-confirmation'
-  | 'admin-products';
+  | 'login'
+  | 'admin-products'
+  | 'admin-orders';
 
 export interface NavigationRoute {
   name: ScreenName;
@@ -88,5 +97,6 @@ export interface NavigationRoute {
     gender?: Gender;
     search?: string;
     orderNumber?: string;
+    returnTo?: ScreenName;
   };
 }

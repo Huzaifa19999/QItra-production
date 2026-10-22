@@ -10,6 +10,7 @@ import {
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { useCart } from '../context/CartContext';
+import { useAuth } from '../context/AuthContext';
 import { NavigationRoute } from '../types';
 
 interface HeaderProps {
@@ -26,6 +27,7 @@ export const Header: React.FC<HeaderProps> = ({
   activeGender,
 }) => {
   const { totalItems } = useCart();
+  const { isAdmin } = useAuth();
   const { width } = useWindowDimensions();
   const isMobile = width < 768;
 
@@ -132,14 +134,26 @@ export const Header: React.FC<HeaderProps> = ({
 
           {/* RIGHT ACTIONS: CART & MENU */}
           <View style={styles.actionsContainer}>
-            {/* ADMIN CRUD BUTTON */}
+            {/* ADMIN / LOGIN BUTTON */}
             <TouchableOpacity
               style={styles.adminButton}
-              onPress={() => onNavigate({ name: 'admin-products' })}
+              onPress={() =>
+                isAdmin
+                  ? onNavigate({ name: 'admin-products' })
+                  : onNavigate({ name: 'login', params: { returnTo: 'admin-products' } })
+              }
               activeOpacity={0.7}
             >
-              <Ionicons name="settings-outline" size={16} color="#dfba73" />
-              {!isMobile && <Text style={styles.adminButtonText}></Text>}
+              <Ionicons
+                name={isAdmin ? 'shield-checkmark' : 'lock-closed-outline'}
+                size={15}
+                color="#dfba73"
+              />
+              {!isMobile && (
+                <Text style={styles.adminButtonText}>
+                  {isAdmin ? 'Admin' : 'Admin Login'}
+                </Text>
+              )}
             </TouchableOpacity>
 
             <TouchableOpacity
@@ -287,6 +301,44 @@ export const Header: React.FC<HeaderProps> = ({
                 <Ionicons name="chevron-forward" size={16} color="#d4af37" />
               </TouchableOpacity>
             ))}
+
+            <Text style={[styles.mobileMenuHeading, { marginTop: 16 }]}>ADMINISTRATION</Text>
+            {isAdmin ? (
+              <>
+                <TouchableOpacity
+                  style={styles.mobileMenuItem}
+                  onPress={() => {
+                    onNavigate({ name: 'admin-products' });
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.mobileMenuItemText, { color: '#dfba73' }]}>Products Catalogue</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#d4af37" />
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.mobileMenuItem}
+                  onPress={() => {
+                    onNavigate({ name: 'admin-orders' });
+                    setMobileMenuOpen(false);
+                  }}
+                >
+                  <Text style={[styles.mobileMenuItemText, { color: '#dfba73' }]}>Orders & Client Address</Text>
+                  <Ionicons name="chevron-forward" size={16} color="#d4af37" />
+                </TouchableOpacity>
+              </>
+            ) : (
+              <TouchableOpacity
+                style={styles.mobileMenuItem}
+                onPress={() => {
+                  onNavigate({ name: 'login', params: { returnTo: 'admin-products' } });
+                  setMobileMenuOpen(false);
+                }}
+              >
+                <Text style={styles.mobileMenuItemText}>Admin Login</Text>
+                <Ionicons name="lock-closed-outline" size={16} color="#dfba73" />
+              </TouchableOpacity>
+            )}
 
             <TouchableOpacity
               style={[styles.mobileMenuItem, styles.whatsappMobileItem]}

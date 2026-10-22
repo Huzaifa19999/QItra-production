@@ -30,7 +30,7 @@ export const CategoryCard: React.FC<CategoryCardProps> = ({
       {category.image && (
         <Image
           source={{ uri: category.image }}
-          style={[styles.bgImage, isHovered && styles.bgImageHovered]}
+          style={[styles.bgImage, isHovered && styles.bgImageHovered] as any}
           resizeMode="cover"
         />
       )}
@@ -65,7 +65,6 @@ const styles = StyleSheet.create({
     position: 'relative',
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.1)',
-    transitionDuration: '300ms' as any,
     width: '100%',
   },
   cardHovered: {
@@ -73,18 +72,17 @@ const styles = StyleSheet.create({
     transform: [{ translateY: -4 }],
   },
   bgImage: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     width: '100%',
     height: '100%',
-    transitionDuration: '700ms' as any,
-  },
+  } as any,
   bgImageHovered: {
     transform: [{ scale: 1.08 }],
   },
   overlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(5, 6, 9, 0.65)',
-  },
+  } as any,
   content: {
     position: 'absolute',
     bottom: 0,
@@ -106,9 +104,7 @@ const styles = StyleSheet.create({
     letterSpacing: 2,
     textTransform: 'uppercase',
   },
-  arrowIcon: {
-    transitionDuration: '300ms' as any,
-  },
+  arrowIcon: {},
   arrowIconHovered: {
     transform: [{ translateX: 4 }],
   },

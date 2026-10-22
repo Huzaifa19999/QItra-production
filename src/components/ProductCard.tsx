@@ -119,7 +119,6 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: 'rgba(255, 255, 255, 0.08)',
     flexDirection: 'column',
-    transitionDuration: '300ms' as any,
   },
   cardHovered: {
     borderColor: 'rgba(212, 175, 55, 0.4)',
@@ -139,7 +138,6 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
-    transitionDuration: '500ms' as any,
   },
   imageHovered: {
     transform: [{ scale: 1.05 }],
@@ -167,11 +165,11 @@ const styles = StyleSheet.create({
     zIndex: 10,
   },
   outOfStockOverlay: {
-    ...StyleSheet.absoluteFillObject,
+    ...StyleSheet.absoluteFill,
     backgroundColor: 'rgba(0, 0, 0, 0.65)',
     justifyContent: 'center',
     alignItems: 'center',
-  },
+  } as any,
   outOfStockText: {
     color: '#f87171',
     fontWeight: '800',

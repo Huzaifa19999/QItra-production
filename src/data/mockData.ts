@@ -1,4 +1,4 @@
-import { Category, Product } from '../types';
+import { Category, Product, OrderResponse } from '../types';
 
 export const CATEGORIES: Category[] = [
   {
@@ -278,5 +278,127 @@ export const PRODUCTS: Product[] = [
     categoryId: 4,
     image: 'https://images.unsplash.com/photo-1582211594533-268f4f1edcb9?w=800',
     category: CATEGORIES[3],
+  },
+];
+
+export const INITIAL_ORDERS: OrderResponse[] = [
+  {
+    id: 1,
+    orderNumber: 'ORD-20261021-4821',
+    customerName: 'Fatima Al-Zahra',
+    phone: '+92 300 1234567',
+    whatsapp: '+92 300 1234567',
+    address: 'House #42, Street 9, Sector F-7/2',
+    city: 'Islamabad',
+    totalAmount: 48000,
+    status: 'CONFIRMED',
+    createdAt: new Date(Date.now() - 3600000 * 5).toISOString(),
+    items: [
+      {
+        id: 101,
+        productId: 1,
+        quantity: 1,
+        price: 38500,
+        product: PRODUCTS[0],
+      },
+      {
+        id: 102,
+        productId: 17,
+        quantity: 1,
+        price: 9500,
+        product: PRODUCTS[16],
+      },
+    ],
+  },
+  {
+    id: 2,
+    orderNumber: 'ORD-20261020-9154',
+    customerName: 'Hamza Tariq',
+    phone: '+92 321 9876543',
+    whatsapp: '+92 321 9876543',
+    address: 'Villa 18, Block B, Phase 5, DHA',
+    city: 'Lahore',
+    totalAmount: 12500,
+    status: 'SHIPPED',
+    createdAt: new Date(Date.now() - 86400000).toISOString(),
+    items: [
+      {
+        id: 103,
+        productId: 16,
+        quantity: 1,
+        price: 12500,
+        product: PRODUCTS[15],
+      },
+    ],
+  },
+  {
+    id: 3,
+    orderNumber: 'ORD-20261019-3320',
+    customerName: 'Ayesha Khan',
+    phone: '+92 333 4567890',
+    whatsapp: '+92 333 4567890',
+    address: 'Apartment 5B, Clifton View Heights, Block 4',
+    city: 'Karachi',
+    totalAmount: 14600,
+    status: 'PENDING',
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    items: [
+      {
+        id: 104,
+        productId: 7,
+        quantity: 1,
+        price: 8500,
+        product: PRODUCTS[6],
+      },
+      {
+        id: 105,
+        productId: 8,
+        quantity: 1,
+        price: 6200,
+        product: PRODUCTS[7],
+      },
+    ],
+  },
+  {
+    id: 4,
+    orderNumber: 'ORD-20261018-8742',
+    customerName: 'Shahid Mahmood',
+    phone: '+92 345 5551234',
+    whatsapp: '+92 345 5551234',
+    address: 'House 112, Street 4, University Town',
+    city: 'Peshawar',
+    totalAmount: 85000,
+    status: 'PROCESSING',
+    createdAt: new Date(Date.now() - 86400000 * 3).toISOString(),
+    items: [
+      {
+        id: 106,
+        productId: 11,
+        quantity: 1,
+        price: 85000,
+        product: PRODUCTS[10],
+      },
+    ],
+  },
+  {
+    id: 5,
+    orderNumber: 'ORD-20261017-1092',
+    customerName: 'Zainab Qureshi',
+    phone: '+92 312 7778899',
+    whatsapp: '+92 312 7778899',
+    address: 'Bungalow 7-A, Model Town, Circular Road',
+    city: 'Faisalabad',
+    totalAmount: 22000,
+    status: 'DELIVERED',
+    createdAt: new Date(Date.now() - 86400000 * 4).toISOString(),
+    items: [
+      {
+        id: 107,
+        productId: 4,
+        quantity: 1,
+        price: 22000,
+        product: PRODUCTS[3],
+      },
+    ],
   },
 ];

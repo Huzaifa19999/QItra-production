@@ -7,7 +7,7 @@ export const productSchema = z.object({
   categoryId: z.coerce.number().int().min(1, 'Category is required'),
   gender: z.enum(['MEN', 'WOMEN', 'CHILDREN', 'UNISEX']).default('UNISEX').optional(),
   stock: z.coerce.number().int().min(0, 'Stock cannot be negative'),
-  image: z.string().url('Must be a valid image URL').optional().or(z.literal('')),
+  image: z.string().optional().or(z.literal('')),
 });
 
 export const checkoutFormSchema = z.object({
